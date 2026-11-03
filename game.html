@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puzzle Challenge: Jenis Data</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+            touch-action: pan-y; /* Allow vertical scrolling, handle custom touch logic for drag */
+        }
+        
+        .font-code { font-family: 'Space Mono', monospace; }
+        
+        /* Custom Animations */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        
+        @keyframes pulse-neon {
+            0%, 100% { box-shadow: 0 0 10px #06b6d4, 0 0 20px #06b6d4; }
+            50% { box-shadow: 0 0 20px #3b82f6, 0 0 30px #3b82f6; }
+        }
+        .neon-border { animation: pulse-neon 2s infinite alternate; border: 2px solid #06b6d4; }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+        .animate-shake { animation: shake 0.4s ease-in-out; }
+        
+        @keyframes pop {
+            0% { transform: scale(0.9); opacity: 0; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop { animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        
+        /* Drag and Drop Visuals */
+        .draggable {
+            cursor: grab;
+            transition: transform 0.2s, opacity 0.2s, box-shadow 0.2s;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .draggable:active { cursor: grabbing; transform: scale(0.95); }
+        .draggable.dragging { opacity: 0.5; transform: scale(1.05); }
+        
+        .dropzone {
+            transition: background-color 0.3s, border-color 0.3s, transform 0.2s;
+        }
+        .dropzone.drag-over {
+            background-color: rgba(6, 182, 212, 0.3);
+            border-color: #22d3ee;
+            transform: scale(1.02);
+        }
+
+        /* Heart Animation */
+        @keyframes heartPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); filter: brightness(1.2); }
+            100% { transform: scale(1); }
+        }
+        .heart-pulse { animation: heartPulse 0.5s ease-in-out; }
+
+        /* Toast Message */
+        #toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 50;
+            display: none;
+        }
+        
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center p-4 sm:p-6">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="px-6 py-3 rounded-full font-bold text-center text-white shadow-xl"></div>
+
+    <!-- MAIN MENU SCREEN -->
+    <div id="screen-menu" class="w-full max-w-xl mx-auto flex flex-col items-center mt-10 animate-pop">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-2 animate-float">PUZZLE CHALLENGE</h1>
+            <h2 class="text-xl md:text-2xl font-bold text-purple-300">JENIS DATA DAN PEMBOLEH UBAH</h2>
+            <p class="mt-4 text-gray-300 text-sm md:text-base">Mata Pelajaran Asas Sains Komputer (ASK) Tingkatan 2</p>
+        </div>
+
+        <div class="glass-panel w-full p-6 md:p-8 rounded-2xl shadow-2xl">
+            <h3 class="text-lg font-semibold text-cyan-400 mb-4 border-b border-gray-600 pb-2">Masukkan Maklumat Diri</h3>
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium mb-1 text-gray-300">Nama Penuh</label>
+                    <input type="text" id="input-nama" class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-600 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-white placeholder-gray-500 transition-all" placeholder="Contoh: Ahmad Ali" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1 text-gray-300">Kelas</label>
+                    <input type="text" id="input-kelas" class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-600 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-white placeholder-gray-500 transition-all" placeholder="Contoh: 2 Bestari" required>
+                </div>
+            </div>
+
+            <div class="bg-slate-800 p-4 rounded-xl mb-6 border border-slate-700">
+                <h4 class="font-bold text-yellow-400 mb-2 flex items-center"><svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Arahan Permainan:</h4>
+                <ul class="text-sm text-gray-300 space-y-1 ml-6 list-disc">
+                    <li>Padankan blok pemboleh ubah dengan jenis data yang betul.</li>
+                    <li>Tarik dan lepaskan (Drag & Drop) kotak ke ruang jawapan.</li>
+                    <li>Setiap jawapan betul: <b>+5 Markah</b>.</li>
+                    <li>Jawapan salah: <b>Tolak 1 Nyawa (❤️)</b>.</li>
+                    <li>Markah > 20 mendapat <b>1 Bonus Nyawa</b>!</li>
+                </ul>
+            </div>
+
+            <button onclick="startGame()" class="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xl font-bold rounded-xl shadow-lg transform transition hover:-translate-y-1 hover:shadow-cyan-500/50">
+                MULA PERMAINAN
+            </button>
+        </div>
+    </div>
+
+    <!-- GAME SCREEN -->
+    <div id="screen-game" class="w-full max-w-6xl mx-auto hidden flex-col">
+        <!-- HUD (Heads Up Display) -->
+        <div class="glass-panel w-full p-4 rounded-2xl mb-6 flex flex-wrap justify-between items-center gap-4 sticky top-4 z-40">
+            <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
+                <div>
+                    <div class="text-xs text-gray-400 uppercase font-bold tracking-wider">Pemain</div>
+                    <div class="font-bold text-cyan-300 truncate max-w-[150px]" id="hud-nama">Ahmad</div>
+                </div>
+                <div class="h-8 w-px bg-gray-600 hidden md:block"></div>
+                <div>
+                    <div class="text-xs text-gray-400 uppercase font-bold tracking-wider">Kelas</div>
+                    <div class="font-bold text-purple-300 truncate max-w-[100px]" id="hud-kelas">2B</div>
+                </div>
+                <div class="h-8 w-px bg-gray-600 hidden md:block"></div>
+                <div>
+                    <div class="text-xs text-gray-400 uppercase font-bold tracking-wider">Masa</div>
+                    <div class="font-bold font-code text-yellow-300 text-lg" id="hud-masa">00:00</div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 border-gray-600 pt-3 md:pt-0">
+                <div class="flex flex-col items-center">
+                    <div class="text-xs text-gray-400 uppercase font-bold tracking-wider">Kemajuan</div>
+                    <div class="font-bold text-white"><span id="hud-kemajuan">0</span>/8</div>
+                </div>
+                <div class="flex flex-col items-center">
+                    <div class="text-xs text-gray-400 uppercase font-bold tracking-wider">Skor</div>
+                    <div class="font-black text-2xl text-green-400" id="hud-skor">0</div>
+                </div>
+                <div class="flex flex-col items-end min-w-[80px]">
+                    <div class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Nyawa</div>
+                    <div class="flex gap-1" id="hud-nyawa">
+                        <!-- Hearts injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Area -->
+        <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 w-full">
+            <!-- Part A: Variables -->
+            <div class="w-full lg:w-1/2 flex flex-col">
+                <h3 class="text-xl font-bold mb-4 text-center lg:text-left text-cyan-400">BAHAGIAN A: PEMBOLEH UBAH</h3>
+                <div class="bg-slate-800/50 p-4 sm:p-6 rounded-2xl border border-slate-700 min-h-[400px]">
+                    <div id="variables-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Draggables injected here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Part B: Data Types (Dropzones) -->
+            <div class="w-full lg:w-1/2 flex flex-col">
+                <h3 class="text-xl font-bold mb-4 text-center lg:text-left text-purple-400">BAHAGIAN B: JENIS DATA</h3>
+                <div id="dropzones-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Dropzones injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME OVER SCREEN -->
+    <div id="screen-gameover" class="w-full max-w-lg mx-auto hidden flex-col items-center mt-10">
+        <div class="glass-panel w-full p-8 rounded-3xl shadow-2xl text-center relative overflow-hidden">
+            <!-- Decorative bg elements -->
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-cyan-400 to-purple-500"></div>
+            
+            <h1 class="text-4xl font-black text-white mb-2 mt-4" id="go-title">PERMAINAN TAMAT</h1>
+            <div class="inline-block px-4 py-1 rounded-full text-sm font-bold bg-slate-800 text-cyan-300 mb-6 border border-slate-600">
+                Pencapaian: <span id="go-pencapaian" class="text-yellow-300"></span>
+            </div>
+
+            <div class="bg-slate-900/80 rounded-2xl p-6 mb-8 border border-slate-700">
+                <div class="grid grid-cols-2 gap-y-4 gap-x-2 text-left text-sm md:text-base">
+                    <div class="text-gray-400 font-medium">Nama Pemain:</div>
+                    <div class="font-bold text-white text-right" id="go-nama"></div>
+                    
+                    <div class="text-gray-400 font-medium">Kelas:</div>
+                    <div class="font-bold text-white text-right" id="go-kelas"></div>
+                    
+                    <div class="text-gray-400 font-medium mt-2 pt-2 border-t border-gray-700">Jumlah Skor:</div>
+                    <div class="font-black text-green-400 text-2xl text-right mt-2 pt-2 border-t border-gray-700" id="go-skor"></div>
+                    
+                    <div class="text-gray-400 font-medium">Masa Menjawab:</div>
+                    <div class="font-bold text-yellow-300 font-code text-right" id="go-masa"></div>
+                    
+                    <div class="text-gray-400 font-medium">Baki Nyawa:</div>
+                    <div class="font-bold text-red-400 text-right" id="go-nyawa"></div>
+                </div>
+            </div>
+
+            <div id="status-penyimpanan" class="mb-6 text-sm font-medium h-6 text-cyan-300">
+                Menyimpan rekod ke pangkalan data...
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4 w-full">
+                <button onclick="resetGame()" class="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition shadow-lg">
+                    MAIN SEMULA
+                </button>
+                <button onclick="showMainMenu()" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition border border-slate-500">
+                    MENU UTAMA
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio Effects (Using base64 for pure standalone data, no external URLs to break) -->
+    <!-- Simple synthesized sounds will be generated via AudioContext to ensure it works anywhere -->
+
+    <script>
+        // --- GAME DATA & STATE ---
+        const variableBank = [
+            { id: 'v1', text: 'nama = "Ali"', type: 'String' },
+            { id: 'v2', text: 'umur = 15', type: 'Integer' },
+            { id: 'v3', text: 'tinggi = 1.65', type: 'Float' },
+            { id: 'v4', text: 'lulus = True', type: 'Boolean' },
+            { id: 'v5', text: 'markah = 85', type: 'Integer' },
+            { id: 'v6', text: 'harga = 12.50', type: 'Float' },
+            { id: 'v7', text: 'aktif = False', type: 'Boolean' },
+            { id: 'v8', text: 'kelas = "2 Bestari"', type: 'String' }
+        ];
+        
+        const dataTypes = [
+            { id: 'String', label: 'String', color: 'bg-blue-900/50', border: 'border-blue-500' },
+            { id: 'Integer', label: 'Integer', color: 'bg-green-900/50', border: 'border-green-500' },
+            { id: 'Float', label: 'Float', color: 'bg-yellow-900/50', border: 'border-yellow-500' },
+            { id: 'Boolean', label: 'Boolean', color: 'bg-purple-900/50', border: 'border-purple-500' }
+        ];
+
+        let state = {
+            nama: '',
+            kelas: '',
+            skor: 0,
+            nyawa: 3,
+            maxNyawa: 5,
+            bonusGranted: false,
+            masaSaat: 0,
+            interval: null,
+            variables: [],
+            matched: 0,
+            total: variableBank.length
+        };
+
+        // --- AUDIO SYSTEM (Web Audio API) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            const now = audioCtx.currentTime;
+            
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.exponentialRampToValueAtTime(880, now + 0.1); // A5
+                gainNode.gain.setValueAtTime(0.5, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+                gainNode.gain.setValueAtTime(0.5, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'bonus') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.setValueAtTime(554.37, now + 0.1);
+                osc.frequency.setValueAtTime(659.25, now + 0.2);
+                gainNode.gain.setValueAtTime(0.3, now);
+                gainNode.gain.linearRampToValueAtTime(0.01, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            } else if (type === 'gameover') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 1);
+                gainNode.gain.setValueAtTime(0.5, now);
+                gainNode.gain.linearRampToValueAtTime(0.01, now + 1);
+                osc.start(now);
+                osc.stop(now + 1);
+            }
+        }
+
+        // --- UTILITIES ---
+        function shuffleArray(array) {
+            let curId = array.length;
+            while (0 !== curId) {
+                let randId = Math.floor(Math.random() * curId);
+                curId -= 1;
+                let tmp = array[curId];
+                array[curId] = array[randId];
+                array[randId] = tmp;
+            }
+            return array;
+        }
+
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        function showToast(msg, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.style.display = 'block';
+            toast.className = `px-6 py-3 rounded-full font-bold text-center text-white shadow-xl animate-pop ${type === 'success' ? 'bg-green-500' : type === 'bonus' ? 'bg-yellow-500 text-slate-900' : 'bg-red-500'}`;
+            setTimeout(() => { toast.style.display = 'none'; }, 2000);
+        }
+
+        function renderHearts() {
+            const container = document.getElementById('hud-nyawa');
+            container.innerHTML = '';
+            for (let i = 0; i < state.maxNyawa; i++) {
+                const heart = document.createElement('div');
+                heart.className = `text-xl transition-all duration-300 ${i < state.nyawa ? 'text-red-500 drop-shadow-[0_0_5px_rgba(239,68,68,0.8)]' : 'text-gray-600 opacity-50 grayscale'}`;
+                heart.innerHTML = '❤️';
+                container.appendChild(heart);
+            }
+        }
+
+        // --- CORE GAME LOGIC ---
+
+        function startGame() {
+            const nama = document.getElementById('input-nama').value.trim();
+            const kelas = document.getElementById('input-kelas').value.trim();
+
+            if (!nama || !kelas) {
+                showToast("Sila masukkan nama dan kelas!", "error");
+                return;
+            }
+
+            // Init state
+            state = {
+                nama: nama,
+                kelas: kelas,
+                skor: 0,
+                nyawa: 3,
+                maxNyawa: 5,
+                bonusGranted: false,
+                masaSaat: 0,
+                matched: 0,
+                total: variableBank.length,
+                variables: shuffleArray(JSON.parse(JSON.stringify(variableBank))),
+                interval: setInterval(updateTimer, 1000)
+            };
+
+            // Update HUD
+            document.getElementById('hud-nama').textContent = nama;
+            document.getElementById('hud-kelas').textContent = kelas;
+            document.getElementById('hud-skor').textContent = state.skor;
+            document.getElementById('hud-kemajuan').textContent = state.matched;
+            document.getElementById('hud-masa').textContent = "00:00";
+            renderHearts();
+
+            // Switch Screen
+            document.getElementById('screen-menu').classList.add('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+            document.getElementById('screen-game').classList.add('flex');
+
+            renderGameArea();
+        }
+
+        function updateTimer() {
+            state.masaSaat++;
+            document.getElementById('hud-masa').textContent = formatTime(state.masaSaat);
+        }
+
+        function renderGameArea() {
+            const varContainer = document.getElementById('variables-container');
+            const dropContainer = document.getElementById('dropzones-container');
+            
+            varContainer.innerHTML = '';
+            dropContainer.innerHTML = '';
+
+            // Render Draggables
+            state.variables.forEach(v => {
+                const el = document.createElement('div');
+                el.className = 'draggable bg-gradient-to-r from-slate-700 to-slate-600 p-4 rounded-xl border border-slate-500 shadow-md font-code text-center text-sm md:text-base hover:border-cyan-400 touch-none';
+                el.draggable = true;
+                el.id = v.id;
+                el.dataset.type = v.type;
+                el.innerHTML = `<code>${v.text}</code>`;
+                
+                // Desktop Drag Events
+                el.addEventListener('dragstart', handleDragStart);
+                el.addEventListener('dragend', handleDragEnd);
+
+                // Mobile Touch Events mapping to Drag functionality
+                el.addEventListener('touchstart', handleTouchStart, {passive: false});
+                el.addEventListener('touchmove', handleTouchMove, {passive: false});
+                el.addEventListener('touchend', handleTouchEnd);
+
+                varContainer.appendChild(el);
+            });
+
+            // Render Dropzones
+            dataTypes.forEach(dt => {
+                const el = document.createElement('div');
+                el.className = `dropzone ${dt.color} ${dt.border} border-2 border-dashed p-6 rounded-2xl h-full min-h-[120px] flex flex-col items-center justify-center relative`;
+                el.dataset.targetType = dt.id;
+                
+                el.innerHTML = `<h4 class="text-xl font-black text-white tracking-wider z-10">${dt.label}</h4>
+                                <div class="matched-items w-full mt-2 flex flex-col gap-2 z-10"></div>
+                                <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+                                    <span class="text-6xl font-black">${dt.label[0]}</span>
+                                </div>`;
+
+                el.addEventListener('dragover', handleDragOver);
+                el.addEventListener('dragleave', handleDragLeave);
+                el.addEventListener('drop', handleDrop);
+
+                dropContainer.appendChild(el);
+            });
+        }
+
+        // --- DRAG AND DROP HANDLERS (DESKTOP) ---
+        let draggedItem = null;
+
+        function handleDragStart(e) {
+            draggedItem = this;
+            setTimeout(() => this.classList.add('dragging'), 0);
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', this.id);
+        }
+
+        function handleDragEnd() {
+            this.classList.remove('dragging');
+            draggedItem = null;
+            document.querySelectorAll('.dropzone').forEach(dz => dz.classList.remove('drag-over'));
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            this.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            const targetType = this.dataset.targetType;
+            if (draggedItem) {
+                processDrop(draggedItem, this, targetType);
+            }
+        }
+
+        // --- TOUCH HANDLERS (MOBILE) ---
+        let touchClone = null;
+        let originalEl = null;
+
+        function handleTouchStart(e) {
+            if (e.target.closest('.draggable')) {
+                e.preventDefault(); // Prevent scrolling
+                originalEl = e.target.closest('.draggable');
+                originalEl.classList.add('dragging');
+                
+                const rect = originalEl.getBoundingClientRect();
+                touchClone = originalEl.cloneNode(true);
+                touchClone.classList.remove('dragging');
+                touchClone.style.position = 'fixed';
+                touchClone.style.top = `${rect.top}px`;
+                touchClone.style.left = `${rect.left}px`;
+                touchClone.style.width = `${rect.width}px`;
+                touchClone.style.opacity = '0.9';
+                touchClone.style.zIndex = '1000';
+                touchClone.style.pointerEvents = 'none'; // So elementFromPoint works
+                document.body.appendChild(touchClone);
+            }
+        }
+
+        function handleTouchMove(e) {
+            if (touchClone && originalEl) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                // Center clone on finger
+                const rect = originalEl.getBoundingClientRect();
+                touchClone.style.top = `${touch.clientY - rect.height/2}px`;
+                touchClone.style.left = `${touch.clientX - rect.width/2}px`;
+
+                // Highlight dropzone visually
+                const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                document.querySelectorAll('.dropzone').forEach(dz => dz.classList.remove('drag-over'));
+                if (elemBelow) {
+                    const dz = elemBelow.closest('.dropzone');
+                    if (dz) dz.classList.add('drag-over');
+                }
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (touchClone && originalEl) {
+                const touch = e.changedTouches[0];
+                const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                document.querySelectorAll('.dropzone').forEach(dz => dz.classList.remove('drag-over'));
+                
+                touchClone.remove();
+                touchClone = null;
+                originalEl.classList.remove('dragging');
+
+                if (elemBelow) {
+                    const dropzone = elemBelow.closest('.dropzone');
+                    if (dropzone) {
+                        processDrop(originalEl, dropzone, dropzone.dataset.targetType);
+                    }
+                }
+                originalEl = null;
+            }
+        }
+
+        // --- GAME MECHANICS ---
+        function processDrop(element, dropzone, targetType) {
+            const actualType = element.dataset.type;
+
+            if (actualType === targetType) {
+                // Correct Match
+                playSound('correct');
+                showToast("TAHNIAH! PADANAN BETUL!", "success");
+                
+                state.skor += 5;
+                state.matched++;
+                
+                // Visual update
+                element.classList.remove('draggable');
+                element.removeAttribute('draggable');
+                element.removeEventListener('touchstart', handleTouchStart);
+                element.classList.add('bg-green-800/80', 'border-green-400', 'text-xs', 'p-2', 'm-0', 'animate-pop');
+                element.style.touchAction = 'auto'; // restore default
+                
+                const matchedContainer = dropzone.querySelector('.matched-items');
+                matchedContainer.appendChild(element);
+
+                // Update HUD
+                document.getElementById('hud-skor').textContent = state.skor;
+                document.getElementById('hud-kemajuan').textContent = state.matched;
+                document.getElementById('hud-skor').classList.add('animate-pop');
+                setTimeout(() => document.getElementById('hud-skor').classList.remove('animate-pop'), 400);
+
+                // Check Bonus Life
+                if (state.skor > 20 && !state.bonusGranted && state.nyawa < state.maxNyawa) {
+                    state.bonusGranted = true;
+                    state.nyawa++;
+                    playSound('bonus');
+                    showToast("+1 BONUS NYAWA!", "bonus");
+                    renderHearts();
+                    
+                    const hearts = document.getElementById('hud-nyawa').children;
+                    hearts[state.nyawa-1].classList.add('heart-pulse');
+                }
+
+                checkGameEnd();
+
+            } else {
+                // Wrong Match
+                playSound('wrong');
+                showToast("CUBA LAGI!", "error");
+                
+                element.classList.add('animate-shake', 'border-red-500');
+                setTimeout(() => {
+                    element.classList.remove('animate-shake', 'border-red-500');
+                }, 400);
+
+                state.nyawa--;
+                renderHearts();
+                
+                // Shake the lost heart
+                const hearts = document.getElementById('hud-nyawa').children;
+                if(hearts[state.nyawa]) hearts[state.nyawa].classList.add('animate-shake');
+
+                checkGameEnd();
+            }
+        }
+
+        function checkGameEnd() {
+            if (state.nyawa <= 0 || state.matched === state.total) {
+                clearInterval(state.interval);
+                setTimeout(showGameOver, 500); // slight delay for last animation
+            }
+        }
+
+        function showGameOver() {
+            playSound('gameover');
+            document.getElementById('screen-game').classList.remove('flex');
+            document.getElementById('screen-game').classList.add('hidden');
+            
+            const goScreen = document.getElementById('screen-gameover');
+            goScreen.classList.remove('hidden');
+            goScreen.classList.add('flex');
+
+            // Determine Achievement
+            let pencapaian = "";
+            let pencapaianColor = "";
+            if (state.skor >= 35) { pencapaian = "PAKAR PENGATURCARAAN!"; pencapaianColor = "text-yellow-300"; }
+            else if (state.skor >= 25) { pencapaian = "HEBAT!"; pencapaianColor = "text-cyan-300"; }
+            else if (state.skor >= 15) { pencapaian = "BAGUS!"; pencapaianColor = "text-green-300"; }
+            else { pencapaian = "TERUSKAN USAHA!"; pencapaianColor = "text-gray-300"; }
+
+            // Title changes based on win/lose
+            document.getElementById('go-title').textContent = state.nyawa <= 0 ? "CUBA LAGI!" : "TAHNIAH!";
+            
+            document.getElementById('go-pencapaian').textContent = pencapaian;
+            document.getElementById('go-pencapaian').className = pencapaianColor;
+            
+            document.getElementById('go-nama').textContent = state.nama;
+            document.getElementById('go-kelas').textContent = state.kelas;
+            document.getElementById('go-skor').textContent = state.skor;
+            document.getElementById('go-masa').textContent = formatTime(state.masaSaat) + " saat";
+            document.getElementById('go-nyawa').textContent = state.nyawa + " / " + state.maxNyawa;
+
+            simpanRekod();
+        }
+
+        function simpanRekod() {
+            const statusEl = document.getElementById('status-penyimpanan');
+            statusEl.textContent = "Menyimpan rekod ke pangkalan data...";
+            statusEl.className = "mb-6 text-sm font-medium h-6 text-cyan-300 animate-pulse";
+
+            const record = {
+                nama: state.nama,
+                kelas: state.kelas,
+                skor: state.skor,
+                masa: state.masaSaat,
+                nyawa: state.nyawa
+            };
+
+            // Check if running inside Google Apps Script environment
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                google.script.run
+                    .withSuccessHandler(function(response) {
+                        statusEl.classList.remove('animate-pulse');
+                        if(response.success) {
+                            statusEl.textContent = response.message;
+                            statusEl.className = "mb-6 text-sm font-bold h-6 text-green-400";
+                        } else {
+                            statusEl.textContent = response.message;
+                            statusEl.className = "mb-6 text-sm font-bold h-6 text-red-400";
+                        }
+                    })
+                    .withFailureHandler(function(error) {
+                        statusEl.classList.remove('animate-pulse');
+                        statusEl.textContent = "Ralat pelayan: Gagal menyimpan.";
+                        statusEl.className = "mb-6 text-sm font-bold h-6 text-red-400";
+                    })
+                    .saveRecord(record);
+            } else {
+                // Mock behavior for local testing outside GAS
+                setTimeout(() => {
+                    statusEl.classList.remove('animate-pulse');
+                    statusEl.textContent = "(Mod Ujian) Rekod tidak disimpan ke Sheets.";
+                    statusEl.className = "mb-6 text-sm font-bold h-6 text-yellow-400";
+                    console.log("Mock save record:", record);
+                }, 1500);
+            }
+        }
+
+        function resetGame() {
+            document.getElementById('screen-gameover').classList.add('hidden');
+            startGame(); // Restarts with current name/class
+        }
+
+        function showMainMenu() {
+            document.getElementById('screen-gameover').classList.add('hidden');
+            document.getElementById('screen-menu').classList.remove('hidden');
+            document.getElementById('input-nama').value = '';
+            document.getElementById('input-kelas').value = '';
+        }
+
+    </script>
+</body>
+</html>
